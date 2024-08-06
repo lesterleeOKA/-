@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(CanvasGroup))]
 public class DragDrop : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
 {
-    public Vector2 orginalPosition = Vector2.zero;
+    public Vector2 originalPosition = Vector2.zero;
     public  bool isDroppedOnValidTarget = false;
     private RectTransform rectTransform = null;
     private CanvasGroup cg = null;
@@ -15,7 +15,7 @@ public class DragDrop : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         this.rectTransform = GetComponent<RectTransform>();
         this.cg = GetComponent<CanvasGroup>();
-        this.orginalPosition = this.rectTransform.anchoredPosition;
+        this.originalPosition = this.rectTransform.anchoredPosition;
     }
     public void OnBeginDrag(PointerEventData eventData)
     {
@@ -31,31 +31,51 @@ public class DragDrop : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void OnDrag(PointerEventData eventData)
     {
         //Debug.Log("dragging");
-        this.rectTransform.anchoredPosition += eventData.delta;
+        Vector2 localPoint;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(this.rectTransform.parent as RectTransform, eventData.position, eventData.pressEventCamera, out localPoint);
+        this.rectTransform.anchoredPosition = localPoint;
+
     }
     public void OnEndDrag(PointerEventData eventData)
     {
 
-        if (eventData.pointerDrag != null && eventData.pointerEnter != null)
+        if (!isDroppedOnValidTarget)
         {
-            ItemSlot itemSlot = eventData.pointerEnter.GetComponent<ItemSlot>();
-            if (itemSlot != null)
+            SnapToClosestSlot(eventData);
+        }
+
+        if (cg != null)
+        {
+            cg.interactable = true;
+            cg.blocksRaycasts = true;
+        }
+
+    }
+
+    private void SnapToClosestSlot(PointerEventData eventData)
+    {
+        ItemSlot closestSlot = null;
+        float closestDistance = float.MaxValue;
+
+        foreach (ItemSlot slot in FindObjectsOfType<ItemSlot>())
+        {
+            float distance = Vector2.Distance(rectTransform.position, slot.transform.position);
+            if (distance < closestDistance)
             {
-                this.isDroppedOnValidTarget = true;
+                closestDistance = distance;
+                closestSlot = slot;
             }
         }
 
-        if (!isDroppedOnValidTarget)
+        if (closestSlot != null)
         {
-            this.rectTransform.anchoredPosition = this.orginalPosition;
+            rectTransform.anchoredPosition = (closestSlot.transform as RectTransform).anchoredPosition;
+            isDroppedOnValidTarget = true;
         }
-
-        //Debug.Log("OnEndDrag");
-        if (this.cg != null)
+        else
         {
-            this.cg.interactable = true;
-            this.cg.blocksRaycasts = true;
+            // Return to original position if no valid slot found
+            rectTransform.anchoredPosition = this.originalPosition;
         }
-
     }
 }
