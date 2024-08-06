@@ -20,7 +20,7 @@ public class ItemSlot : MonoBehaviour, IDropHandler
         if (target != null)
         {
             Debug.Log("OnDrop");
-            target.GetComponent<RectTransform>().anchoredPosition = this.rectTransform.anchoredPosition;
+            //target.GetComponent<RectTransform>().anchoredPosition = this.rectTransform.anchoredPosition;
         }
         
         

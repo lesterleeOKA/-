@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using static UnityEngine.GraphicsBuffer;
 
 [RequireComponent(typeof(CanvasGroup))]
 public class DragDrop : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
@@ -38,44 +40,25 @@ public class DragDrop : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void OnEndDrag(PointerEventData eventData)
     {
-
-        if (!isDroppedOnValidTarget)
+        if (eventData.pointerEnter != null && eventData.pointerEnter.GetComponent<ItemSlot>() != null)
         {
-            SnapToClosestSlot(eventData);
-        }
-
-        if (cg != null)
-        {
-            cg.interactable = true;
-            cg.blocksRaycasts = true;
-        }
-
-    }
-
-    private void SnapToClosestSlot(PointerEventData eventData)
-    {
-        ItemSlot closestSlot = null;
-        float closestDistance = float.MaxValue;
-
-        foreach (ItemSlot slot in FindObjectsOfType<ItemSlot>())
-        {
-            float distance = Vector2.Distance(rectTransform.position, slot.transform.position);
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                closestSlot = slot;
-            }
-        }
-
-        if (closestSlot != null)
-        {
-            rectTransform.anchoredPosition = (closestSlot.transform as RectTransform).anchoredPosition;
-            isDroppedOnValidTarget = true;
+            var itemSlot = eventData.pointerEnter.GetComponent<ItemSlot>();
+            this.isDroppedOnValidTarget = true;
+            this.rectTransform.anchoredPosition = itemSlot.GetComponent<RectTransform>().anchoredPosition;
+            Debug.Log("OnDrop");
         }
         else
         {
-            // Return to original position if no valid slot found
-            rectTransform.anchoredPosition = this.originalPosition;
+            this.isDroppedOnValidTarget = false;
+            this.rectTransform.anchoredPosition = originalPosition;
+        }
+
+        // Re-enable interaction and raycast blocking
+        if (this.cg != null)
+        {
+            this.cg.interactable = true;
+            this.cg.blocksRaycasts = true;
         }
     }
+
 }
