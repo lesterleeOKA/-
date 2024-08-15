@@ -1,23 +1,25 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using static UnityEngine.GraphicsBuffer;
+
 
 [RequireComponent(typeof(CanvasGroup))]
 public class DragDrop : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
 {
     public Vector2 originalPosition = Vector2.zero;
-    public  bool isDroppedOnValidTarget = false;
-    private RectTransform rectTransform = null;
+    public bool isDroppedOnValidTarget = false;
+    [HideInInspector]
+    public RectTransform rectTransform = null;
     private CanvasGroup cg = null;
+    public Vector2 originalSize;
 
-    private void Awake()
+
+    protected virtual void Awake()
     {
         this.rectTransform = GetComponent<RectTransform>();
         this.cg = GetComponent<CanvasGroup>();
         this.originalPosition = this.rectTransform.anchoredPosition;
+        this.originalSize = this.rectTransform.sizeDelta;
+
     }
     public void OnBeginDrag(PointerEventData eventData)
     {
@@ -36,9 +38,9 @@ public class DragDrop : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         Vector2 localPoint;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(this.rectTransform.parent as RectTransform, eventData.position, eventData.pressEventCamera, out localPoint);
         this.rectTransform.anchoredPosition = localPoint;
-
+        if (this.rectTransform.sizeDelta != originalSize) { this.rectTransform.sizeDelta = originalSize; }
     }
-    public void OnEndDrag(PointerEventData eventData)
+    public virtual void OnEndDrag(PointerEventData eventData)
     {
         if (eventData.pointerEnter != null && eventData.pointerEnter.GetComponent<ItemSlot>() != null)
         {
@@ -60,5 +62,6 @@ public class DragDrop : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             this.cg.blocksRaycasts = true;
         }
     }
+
 
 }
